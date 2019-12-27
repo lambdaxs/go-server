@@ -2,6 +2,7 @@ package confu
 
 import (
     "errors"
+    "flag"
     "fmt"
     "github.com/hashicorp/consul/api"
     "github.com/jinzhu/configor"
@@ -9,6 +10,15 @@ import (
     "os"
     "time"
 )
+
+//解析本地和远端配置参数
+func ParseFlag() (string, string){
+    var configPath string
+    var remoteConfigPath string
+    flag.StringVar(&configPath, "config", "", "config file path")
+    flag.StringVar(&remoteConfigPath, "remote-config", "", "remote config file path")
+    return configPath, remoteConfigPath
+}
 
 //通过本地文件初始化配置
 func InitWithFilePath(path string, data interface{}) error {

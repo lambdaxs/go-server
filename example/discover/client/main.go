@@ -15,7 +15,9 @@ func main(){
         panic(err)
     }
 
-    conn,err := grpc.Dial(fmt.Sprintf("%s:///HelloService", schema), grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name))
+    conn,err := grpc.Dial(fmt.Sprintf("%s:///HelloService", schema),
+        grpc.WithInsecure(),
+        grpc.WithBalancerName(roundrobin.Name), )
     if err != nil {
         panic(err)
     }

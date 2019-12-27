@@ -28,18 +28,14 @@ func main(){
     port := 8080
     consulPort := 8500
 
-    listen, err := net.ListenTCP("tcp", &net.TCPAddr{net.ParseIP(host), port, "",})
-    if err != nil {
-        fmt.Println(err.Error())
-    }
+
     s := grpc.NewServer()
 
     // register service
     cr := discover.ConsulRegister{
         DCName:  "",
         Address: fmt.Sprintf("%s:%d", host, consulPort),
-        Ttl:     time.Second * 15,
-    }
+        Ttl:     time.Second * 15,    }
     if err := cr.Register(discover.RegisterInfo{
         Host:           host,
         Port:           port,
@@ -50,6 +46,11 @@ func main(){
 
     pb.RegisterHelloServerServer(s, &server{})
     reflection.Register(s)
+
+    listen, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, port))
+    if err != nil {
+        fmt.Println(err.Error())
+    }
     if err := s.Serve(listen); err != nil {
         fmt.Println("failed to serve:" + err.Error())
     }
