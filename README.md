@@ -1,3 +1,14 @@
+## 特性
+
+- 服务注册发现
+- grpc负载均衡
+- 配置中心
+- 监控/日志/链路
+- 常用数据库驱动
+
+## Example
+
+```go
 package main
 
 import (
@@ -46,3 +57,5 @@ func main() {
         hello.RegisterHelloServerServer(srv, &SayHelloServer{})
     })
 }
+
+```
