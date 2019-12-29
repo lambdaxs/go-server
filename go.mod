@@ -12,6 +12,7 @@ require (
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.3.0 // indirect
+	github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829
 	github.com/qiniu/api.v7/v7 v7.4.1
 	golang.org/x/net v0.0.0-20190311183353-d8887717615a
 	golang.org/x/text v0.3.2 // indirect
