@@ -1,4 +1,4 @@
-package validdate
+package validate
 
 import (
     "errors"
