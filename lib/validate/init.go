@@ -16,7 +16,6 @@ var (
 
 func init() {
     GlobalValidate = New()
-
 }
 
 func New() *validator.Validate {
