@@ -4,6 +4,17 @@ github.com/BurntSushi/toml
 github.com/armon/go-metrics
 # github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973
 github.com/beorn7/perks/quantile
+# github.com/bluele/gcache v0.0.0-20190518031135-bc40bd653833
+github.com/bluele/gcache
+# github.com/go-playground/locales v0.13.0
+github.com/go-playground/locales
+github.com/go-playground/locales/currency
+github.com/go-playground/locales/zh
+# github.com/go-playground/universal-translator v0.17.0
+github.com/go-playground/universal-translator
+# github.com/go-playground/validator/v10 v10.1.0
+github.com/go-playground/validator/v10
+github.com/go-playground/validator/v10/translations/zh
 # github.com/go-sql-driver/mysql v1.4.1
 github.com/go-sql-driver/mysql
 # github.com/golang/protobuf v1.3.2
@@ -40,6 +51,8 @@ github.com/labstack/echo
 # github.com/labstack/gommon v0.3.0
 github.com/labstack/gommon/color
 github.com/labstack/gommon/log
+# github.com/leodido/go-urn v1.2.0
+github.com/leodido/go-urn
 # github.com/mattn/go-colorable v0.1.2
 github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.9

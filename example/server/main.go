@@ -4,10 +4,11 @@ import (
     "context"
     "flag"
     "fmt"
+    "github.com/go-playground/validator/v10"
     "github.com/labstack/echo"
+    "github.com/lambdaxs/go-server/confu"
     hello "github.com/lambdaxs/go-server/example/discover/pb"
     "github.com/lambdaxs/go-server/server"
-    "google.golang.org/grpc"
 )
 
 type SayHelloServer struct {
@@ -22,27 +23,32 @@ func (s *SayHelloServer) SayHello(ctx context.Context, req *hello.SayHelloReq) (
 }
 
 func main() {
+    confu.ParseFlag()
     flag.Parse()
 
-    httpSrv := server.HttpServer{
-        Host:        "127.0.0.1",
-        Port:        9000,
-        ConsulAddr: "127.0.0.1:8500",
-        ServiceName: "HelloService",
-    }
-    go httpSrv.StartEchoServer(func(srv *echo.Echo) {
-        srv.GET("/", func(c echo.Context) error {
-            return c.JSON(200, "hello world");
-        })
-    })
+    vaildate := validator.New()
 
-    grpcSrv := server.GRPCServer{
-        Host:       "127.0.0.1",
-        Port:       9002,
-        ConsulAddr: "127.0.0.1:8500",
-        ServiceName: "HelloService",
+    httpSrv := server.HttpServer{
+        Host: "127.0.0.1",
+        Port: 9000,
     }
-    grpcSrv.StartGRPCServer(func(srv *grpc.Server) {
-        hello.RegisterHelloServerServer(srv, &SayHelloServer{})
+    httpSrv.StartEchoServer(func(srv *echo.Echo) {
+        srv.POST("/", func(c echo.Context) error {
+            reqModel := new(struct {
+                Uid   int64  `json:"uid" form:"uid" validate:"required"`
+                Age   int64  `json:"age" form:"age" validate:"required,gte=0,lte=130"`
+                Email string `json:"email" validate:"required,email"`
+            })
+            if err := c.Bind(reqModel); err != nil {
+                return c.JSON(200, err.Error())
+            }
+            fmt.Println(reqModel)
+            if err := vaildate.Struct(reqModel); err != nil {
+                for _, paramErr := range err.(validator.ValidationErrors) {
+                    return c.JSON(200, "参数错误:"+paramErr.Field())
+                }
+            }
+            return c.JSON(200, "success")
+        })
     })
 }
