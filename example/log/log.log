@@ -1,1 +1,4 @@
-{"level":"info","ts":"2019-12-29T23:42:34.590+0800","caller":"runtime/proc.go:203","msg":"abc msgnamexiaos"}
+{"level":"info","ts":"2020-01-26T17:17:12.181+0800","caller":"log/main.go:6","msg":"this is msg","serviceName":"serviceName","name":"xiaos"}
+{"level":"info","ts":"2020-01-26T18:26:20.104+0800","caller":"log/main.go:9","msg":"this is new msg","serviceName":"serviceName","name":"xiaos"}
+{"level":"info","ts":"2020-01-26T20:04:55.676+0800","msg":"this is new msg","name":"xiaos"}
+{"level":"info","ts":"2020-01-26T20:22:57.919+0800","msg":"this is new msg111","name":"xiaos"}
