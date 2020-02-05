@@ -1,65 +1,84 @@
 package log
 
 import (
-    "os"
-    "path/filepath"
-    "strings"
-
     "go.uber.org/zap"
     "go.uber.org/zap/zapcore"
     "gopkg.in/natefinch/lumberjack.v2"
+    "os"
+    "path/filepath"
+    "strings"
 )
 
-var log *zap.SugaredLogger
+var log *zap.Logger
 
-var logLevel = zap.NewAtomicLevel()
-
-func Init() {
-    filePath := getFilePath()
-    w := zapcore.AddSync(&lumberjack.Logger{
-        Filename:  filePath,
-        MaxSize:   1024, //MB
-        LocalTime: true,
-        Compress:  true,
-    })
-
-    config := zap.NewProductionEncoderConfig()
-    config.EncodeTime = zapcore.ISO8601TimeEncoder
-    core := zapcore.NewCore(
-        zapcore.NewJSONEncoder(config),
-        w,
-        logLevel,
-    )
-    logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
-    log = logger.Sugar()
+type Config struct {
+    Development bool
+    ServiceName string
+    FilePath    string
+    MaxSize     int
+    MaxBackups  int
+    MaxAge int
 }
 
-type Level int8
+func Default() *zap.Logger {
+    if log == nil {
+        log = NewLogger(Config{})
+    }
+    return log
+}
 
-const (
-    DebugLevel Level = iota - 1
+func NewLogger(cfg Config) *zap.Logger {
+    hook := lumberjack.Logger{
+        Filename:   "", // 日志文件路径
+        MaxSize:    128,      // 每个日志文件保存的最大尺寸 单位：M
+        MaxBackups: 30,       // 日志文件最多保存多少个备份
+        MaxAge:     7,        // 文件最多保存多少天
+        Compress:   true,     // 是否压缩
+    }
+    if cfg.FilePath != "" {
+        hook.Filename = cfg.FilePath
+    }else {
+        hook.Filename = getFilePath()
+    }
+    if cfg.MaxSize != 0 {
+        hook.MaxSize = cfg.MaxSize
+    }
+    if cfg.MaxBackups != 0 {
+        hook.MaxBackups = cfg.MaxBackups
+    }
+    if cfg.MaxAge != 0 {
+        hook.MaxAge = cfg.MaxAge
+    }
+    logLevel := zap.NewAtomicLevel()
+    config := zap.NewProductionEncoderConfig()
+    config.EncodeTime = zapcore.ISO8601TimeEncoder
 
-    InfoLevel
-
-    WarnLevel
-
-    ErrorLevel
-
-    DPanicLevel
-
-    PanicLevel
-
-    FatalLevel
-)
-
-func SetLevel(level Level) {
-    logLevel.SetLevel(zapcore.Level(level))
+    writers := []zapcore.WriteSyncer{zapcore.AddSync(&hook)}
+    //开启控制台输出
+    if cfg.Development {
+        writers = append(writers, zapcore.AddSync(os.Stdout))
+    }
+    core := zapcore.NewCore(
+        zapcore.NewJSONEncoder(config),
+        zapcore.NewMultiWriteSyncer(writers...),
+        logLevel,
+    )
+    options := []zap.Option{}
+    if cfg.ServiceName != "" {
+        options = append(options, zap.Fields(zap.String("serviceName", "serviceName")),)
+    }
+    if cfg.Development {
+        options = append(options, zap.AddCaller(), zap.Development())
+    }
+    // 构造日志
+    logger := zap.New(core, options...)
+    return logger
 }
 
 func getCurrentDirectory() string {
     dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
     if err != nil {
-        log.Info(err)
+        panic(err)
     }
     return strings.Replace(dir, "\\", "/", -1)
 }
@@ -78,38 +97,5 @@ func getAppname() string {
         name = strings.TrimSuffix(name, ".exe")
         return name
     }
-
     return ""
-}
-
-func Info(args ...interface{}) {
-    log.Info(args...)
-}
-
-func Infof(template string, args ...interface{}) {
-    log.Infof(template, args...)
-}
-
-func Warn(args ...interface{}) {
-    log.Warn(args...)
-}
-
-func Warnf(template string, args ...interface{}) {
-    log.Warnf(template, args...)
-}
-
-func Error(args ...interface{}) {
-    log.Error(args...)
-}
-
-func Errorf(template string, args ...interface{}) {
-    log.Errorf(template, args...)
-}
-
-func Panic(args ...interface{}) {
-    log.Panic(args...)
-}
-
-func Panicf(template string, args ...interface{}) {
-    log.Panicf(template, args...)
 }

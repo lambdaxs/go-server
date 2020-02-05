@@ -7,8 +7,9 @@ import (
     "github.com/labstack/echo"
     "github.com/lambdaxs/go-server/confu"
     hello "github.com/lambdaxs/go-server/example/discover/pb"
-    "github.com/lambdaxs/go-server/server"
     "github.com/lambdaxs/go-server/lib/validate"
+    "github.com/lambdaxs/go-server/server"
+    "google.golang.org/grpc"
 )
 
 type SayHelloServer struct {
@@ -26,11 +27,16 @@ func main() {
     confu.ParseFlag()
     flag.Parse()
 
+    //logger := log.NewLogger(log.Config{
+    //    Development: true,
+    //})
+    //logger.Info("info",zap.String("key", "value"))
+
     httpSrv := server.HttpServer{
         Host: "127.0.0.1",
         Port: 9000,
     }
-    httpSrv.StartEchoServer(func(srv *echo.Echo) {
+    go httpSrv.StartEchoServer(func(srv *echo.Echo) {
         srv.POST("/", func(c echo.Context) error {
             reqModel := new(struct {
                 Uid   int64  `json:"uid" form:"uid" validate:"required"`
@@ -47,5 +53,13 @@ func main() {
             }
             return c.JSON(200, "success")
         })
+    })
+
+    grpcServer := server.GRPCServer{
+        Host:        "127.0.0.1",
+        Port:        9091,
+    }
+    grpcServer.StartGRPCServer(func(srv *grpc.Server) {
+        hello.RegisterHelloServerServer(srv, &SayHelloServer{})
     })
 }

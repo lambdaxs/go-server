@@ -4,6 +4,8 @@ import (
     "fmt"
     "github.com/labstack/echo"
     "github.com/lambdaxs/go-server/discover"
+    "github.com/lambdaxs/go-server/log"
+    "go.uber.org/zap"
     "time"
 )
 
@@ -38,7 +40,11 @@ func (h *HttpServer)StartEchoServer(serverFunc func(srv *echo.Echo)){
         }
     }
 
-    if err := app.Start(fmt.Sprintf("%s:%d", h.Host, h.Port));err != nil {
+    address := fmt.Sprintf("%s:%d", h.Host, h.Port)
+    log.Default().Info(
+        "⇨ start http server",
+        zap.String("address", address))
+    if err := app.Start(address);err != nil {
         fmt.Println("start echo server error:"+err.Error())
     }
 }

@@ -3,6 +3,8 @@ package server
 import (
     "fmt"
     "github.com/lambdaxs/go-server/discover"
+    "github.com/lambdaxs/go-server/log"
+    "go.uber.org/zap"
     "google.golang.org/grpc"
     "net"
     "time"
@@ -45,7 +47,9 @@ func (g *GRPCServer)StartGRPCServer(registerFunc func(srv *grpc.Server), option 
         }
     }
 
-
+    log.Default().Info(
+        "⇨ start grpc server",
+        zap.String("address", fmt.Sprintf("%s:%d", g.Host, g.Port)))
     fmt.Printf("⇨ grpc server started on \x1b[0;%dm%s\n\x1b[0m",32, fmt.Sprintf("%s:%d", g.Host, g.Port))
     if err := s.Serve(lis);err != nil {
         fmt.Println("start grpc server error:"+err.Error())
