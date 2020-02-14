@@ -1,4 +1,4 @@
-package driver
+package http_client
 
 import (
     "io/ioutil"

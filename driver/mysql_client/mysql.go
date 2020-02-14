@@ -1,4 +1,4 @@
-package driver
+package mysql_client
 
 import (
     "github.com/jinzhu/gorm"

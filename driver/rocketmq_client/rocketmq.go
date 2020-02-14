@@ -1,4 +1,4 @@
-package driver
+package rocketmq_client
 
 import (
     "context"

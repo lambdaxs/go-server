@@ -1,7 +1,6 @@
-package main
+package streaming
 
 import (
-    "fmt"
     "github.com/nats-io/nats.go"
     "github.com/nats-io/stan.go"
     "log"
@@ -130,31 +129,4 @@ func (c *Connection)NatsConn() *nats.Conn {
 
 func (c *Connection)IsClosed() bool {
     return atomic.LoadInt32(&c.closed) == 1
-}
-
-func main() {
-    sc, err := Connect("c1", "server-host-2", stan.NatsURL("nats://49.235.146.124:4222"))
-    if err != nil {
-        fmt.Println("err:" + err.Error())
-        return
-    }
-
-    fmt.Println("初始化连接")
-
-    startOpt := stan.DeliverAllAvailable()
-    _, err = sc.QueueSubscribe("foo", "consumer_group_1", func(msg *stan.Msg) {
-        fmt.Printf("接收到消息：%s time:%d seq:%d\n", string(msg.Data), msg.Timestamp, msg.Sequence)
-        msg.Ack()
-    }, startOpt, stan.DurableName("consumer_1"), stan.SetManualAckMode())
-    if err != nil {
-        fmt.Println(err.Error())
-        return
-    }
-
-    _, err = sc.QueueSubscribe("bar", "consumer_group_1", func(msg *stan.Msg) {
-        fmt.Printf("接收到消息：%s time:%d seq:%d\n", string(msg.Data), msg.Timestamp, msg.Sequence)
-        msg.Ack()
-    }, startOpt, stan.DurableName("consumer_1"), stan.SetManualAckMode())
-
-    select {}
 }

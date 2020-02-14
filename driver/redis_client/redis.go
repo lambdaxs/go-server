@@ -1,4 +1,4 @@
-package driver
+package redis_client
 
 import (
     "github.com/gomodule/redigo/redis"
