@@ -6,6 +6,7 @@ import (
     "os"
     "os/signal"
     "strconv"
+    "strings"
     "syscall"
     "time"
 )
@@ -79,8 +80,11 @@ func (c *ConsulRegister)Register(info RegisterInfo) error {
         for {
             <-ticker.C
             err = client.Agent().UpdateTTL(serviceID, "", check.Status)
-            if err != nil {
-                fmt.Println("consul update ttl err:",err.Error())
+            if err != nil {//服务注销后会抛出500异常
+                msg := err.Error()
+                if !strings.HasPrefix(msg, " Unexpected response code: 500") {
+                    fmt.Println("consul update ttl err:",err.Error())
+                }
             }
         }
     }()

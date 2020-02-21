@@ -35,7 +35,7 @@ func (h *HttpServer)StartEchoServer(serverFunc func(srv *echo.Echo)){
             Host:           h.Host,
             Port:           h.Port,
             ServiceName:    fmt.Sprintf("%s:%s", h.Schema(), h.ServiceName),
-            UpdateTime: time.Second});err != nil {
+            UpdateTime: time.Second*5});err != nil {
             panic(err)
         }
     }
