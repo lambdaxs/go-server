@@ -12,7 +12,7 @@ import (
 var (
 	ServerMetric *prometheus.HistogramVec
 	ErrorMetric  *prometheus.CounterVec
-	SystemMetric *prometheus.HistogramVec
+	SystemMetric *prometheus.GaugeVec
 )
 
 func Init(serviceName string){
@@ -34,7 +34,7 @@ func Init(serviceName string){
 		Help:      "业务错误数",
 	}, []string{"type", "path", "code"})
 
-	SystemMetric = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	SystemMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace:   "go_server",
 		Subsystem:   serviceName,
 		Name:        "system_info",
@@ -51,26 +51,26 @@ func startSystemMonitor(){
 	ticker := time.NewTicker(time.Second*10)
 	for range ticker.C {
 		info := GetSystemInfo()
-		SystemMetric.WithLabelValues("cpu","user").Observe(info.CPU.User)
-		SystemMetric.WithLabelValues("cpu","system").Observe(info.CPU.System)
-		SystemMetric.WithLabelValues("cpu","idle").Observe(info.CPU.Idle)
-		SystemMetric.WithLabelValues("cpu","iowait").Observe(info.CPU.IOWait)
-		SystemMetric.WithLabelValues("cpu","nice").Observe(info.CPU.Nice)
-		SystemMetric.WithLabelValues("cpu","steal").Observe(info.CPU.Steal)
+		SystemMetric.WithLabelValues("cpu","user").Set(info.CPU.User)
+		SystemMetric.WithLabelValues("cpu","system").Set(info.CPU.System)
+		SystemMetric.WithLabelValues("cpu","idle").Set(info.CPU.Idle)
+		SystemMetric.WithLabelValues("cpu","iowait").Set(info.CPU.IOWait)
+		SystemMetric.WithLabelValues("cpu","nice").Set(info.CPU.Nice)
+		SystemMetric.WithLabelValues("cpu","steal").Set(info.CPU.Steal)
 
-		SystemMetric.WithLabelValues("mem","usedpercent").Observe(info.Mem.UsedPercent)
-		SystemMetric.WithLabelValues("mem","total").Observe(float64(info.Mem.Total))
-		SystemMetric.WithLabelValues("mem","used").Observe(float64(info.Mem.Used))
-		SystemMetric.WithLabelValues("mem","free").Observe(float64(info.Mem.Free))
+		SystemMetric.WithLabelValues("mem","usedpercent").Set(info.Mem.UsedPercent)
+		SystemMetric.WithLabelValues("mem","total").Set(float64(info.Mem.Total))
+		SystemMetric.WithLabelValues("mem","used").Set(float64(info.Mem.Used))
+		SystemMetric.WithLabelValues("mem","free").Set(float64(info.Mem.Free))
 
-		SystemMetric.WithLabelValues("net","input").Observe(float64(info.NetIO.BytesRecv))
-		SystemMetric.WithLabelValues("net","output").Observe(float64(info.NetIO.BytesSent))
+		SystemMetric.WithLabelValues("net","input").Set(float64(info.NetIO.BytesRecv))
+		SystemMetric.WithLabelValues("net","output").Set(float64(info.NetIO.BytesSent))
 
-		SystemMetric.WithLabelValues("process","fd").Observe(float64(info.Process.Fd))
+		SystemMetric.WithLabelValues("process","fd").Set(float64(info.Process.Fd))
 
-		SystemMetric.WithLabelValues("load","load1").Observe(info.Load.Load1)
-		SystemMetric.WithLabelValues("load","load5").Observe(info.Load.Load5)
-		SystemMetric.WithLabelValues("load","load15").Observe(info.Load.Load15)
+		SystemMetric.WithLabelValues("load","load1").Set(info.Load.Load1)
+		SystemMetric.WithLabelValues("load","load5").Set(info.Load.Load5)
+		SystemMetric.WithLabelValues("load","load15").Set(info.Load.Load15)
 	}
 }
 
