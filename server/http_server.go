@@ -26,6 +26,9 @@ func (h *HttpServer)StartEchoServer(serverFunc func(srv *echo.Echo)){
     if serverFunc != nil {
         serverFunc(app)
     }
+    if h.Host == "" {//默认使用内网ip
+        h.Host = local.LocalIP()
+    }
     //http服务注册
     if h.ServiceName != "" && h.ConsulAddr != "" {
         cr := discover.ConsulRegister{
@@ -39,10 +42,6 @@ func (h *HttpServer)StartEchoServer(serverFunc func(srv *echo.Echo)){
             UpdateTime: time.Second*5});err != nil {
             panic(err)
         }
-    }
-
-    if h.Host == "" {//默认使用内网ip
-        h.Host = local.LocalIP()
     }
     address := fmt.Sprintf("%s:%d", h.Host, h.Port)
     log.Default().Info(
