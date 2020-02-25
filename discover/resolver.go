@@ -150,7 +150,7 @@ func GetConnSchema(address string, serviceName string) (schema string, err error
 	return
 }
 
-func GetGRPCDialUrl(address string, serviceName string) (dialUrl string, err error) {
+func GetGRPCDialURL(address string, serviceName string) (dialUrl string, err error) {
 	sc, err := GetConnSchema(address, serviceName)
 	if err != nil {
 		return

@@ -3,6 +3,7 @@ package server
 import (
     "fmt"
     "github.com/lambdaxs/go-server/discover"
+    "github.com/lambdaxs/go-server/lib/local"
     "github.com/lambdaxs/go-server/log"
     "go.uber.org/zap"
     "google.golang.org/grpc"
@@ -25,6 +26,9 @@ func (g *GRPCServer)StartGRPCServer(registerFunc func(srv *grpc.Server), option 
     s := grpc.NewServer(option...)
     if registerFunc != nil {
         registerFunc(s)
+    }
+    if g.Host == "" {//默认使用内网ip
+        g.Host = local.LocalIP()
     }
     addr := fmt.Sprintf("%s:%d", g.Host, g.Port)
     lis,err := net.Listen("tcp", addr)

@@ -4,6 +4,7 @@ import (
     "fmt"
     "github.com/labstack/echo"
     "github.com/lambdaxs/go-server/discover"
+    "github.com/lambdaxs/go-server/lib/local"
     "github.com/lambdaxs/go-server/log"
     "go.uber.org/zap"
     "time"
@@ -40,6 +41,9 @@ func (h *HttpServer)StartEchoServer(serverFunc func(srv *echo.Echo)){
         }
     }
 
+    if h.Host == "" {//默认使用内网ip
+        h.Host = local.LocalIP()
+    }
     address := fmt.Sprintf("%s:%d", h.Host, h.Port)
     log.Default().Info(
         "⇨ start http server",
