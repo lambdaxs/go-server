@@ -2,6 +2,7 @@ package monitor
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo"
@@ -15,22 +16,26 @@ var (
 )
 
 func Init(serviceName string){
+	serviceName = strings.ReplaceAll(serviceName,"-","_")
+	serviceName = strings.ReplaceAll(serviceName,".","_")
+	serviceName = strings.ReplaceAll(serviceName," ","_")
+
 	ServerMetric = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "go-server",
+		Namespace: "go_server",
 		Subsystem: serviceName,
 		Name:      "server_handle_duration_ms",
 		Help:      "业务请求吞吐量tps p99",
 	}, []string{"type", "path", "code"})
 
 	ErrorMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "go-server",
+		Namespace: "go_server",
 		Subsystem: serviceName,
 		Name:      "server_handle_error_total",
 		Help:      "业务错误数",
 	}, []string{"type", "path", "code"})
 
 	SystemMetric = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace:   "go-server",
+		Namespace:   "go_server",
 		Subsystem:   serviceName,
 		Name:        "system_info",
 		Help:        "系统数值监控",
