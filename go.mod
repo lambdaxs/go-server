@@ -3,7 +3,9 @@ module github.com/lambdaxs/go-server
 go 1.13
 
 require (
+	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/bluele/gcache v0.0.0-20190518031135-bc40bd653833
+	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-playground/locales v0.13.0
 	github.com/go-playground/universal-translator v0.17.0
 	github.com/go-playground/validator/v10 v10.1.0
@@ -22,6 +24,7 @@ require (
 	github.com/nats-io/stan.go v0.6.0
 	github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829
 	github.com/qiniu/api.v7/v7 v7.4.1
+	github.com/shirou/gopsutil v2.20.1+incompatible
 	github.com/streadway/amqp v0.0.0-20200108173154-1c71cc93ed71
 	go.uber.org/zap v1.13.0
 	google.golang.org/genproto v0.0.0-20191223191004-3caeed10a8bf // indirect
