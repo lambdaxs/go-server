@@ -2,7 +2,6 @@ package monitor
 
 import (
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/labstack/echo"
@@ -15,29 +14,25 @@ var (
 	SystemMetric *prometheus.GaugeVec
 )
 
-func Init(serviceName string){
-	serviceName = strings.ReplaceAll(serviceName,"-","_")
-	serviceName = strings.ReplaceAll(serviceName,".","_")
-	serviceName = strings.ReplaceAll(serviceName," ","_")
-
+func init(){
 	ServerMetric = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "go_server",
-		Subsystem: serviceName,
-		Name:      "server_handle_duration_ms",
+		Namespace: "",
+		Subsystem: "",
+		Name:      "go_server_handle_duration_ms",
 		Help:      "业务请求吞吐量tps p99",
 	}, []string{"type", "path", "code"})
 
 	ErrorMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "go_server",
-		Subsystem: serviceName,
-		Name:      "server_handle_error_total",
+		Namespace: "",
+		Subsystem: "",
+		Name:      "go_server_handle_error_total",
 		Help:      "业务错误数",
 	}, []string{"type", "path", "code"})
 
 	SystemMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace:   "go_server",
-		Subsystem:   serviceName,
-		Name:        "system_info",
+		Namespace:   "",
+		Subsystem:   "",
+		Name:        "go_system_info",
 		Help:        "系统数值监控",
 	},[]string{"type","name"})
 
