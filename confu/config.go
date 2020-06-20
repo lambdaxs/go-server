@@ -29,18 +29,20 @@ func InitWithFilePath(path string, data interface{}) error {
 }
 
 //通过consul远端文件初始化配置
-func InitWithRemotePath(path string, data interface{}, remoteAddr string) error {
+func InitWithRemotePath(path string, data interface{}, remoteAddr string) (content []byte,err error) {
     if remoteAddr == "" {
         remoteAddr = os.Getenv("CONSUL_ADDR")
     }
     if remoteAddr == "" {
-        return errors.New("env var consul_addr is empty")
+        err = errors.New("env var consul_addr is empty")
+        return
     }
     config := api.DefaultConfig()
     config.Address = remoteAddr
     client, err := api.NewClient(config)
     if err != nil {
-        return fmt.Errorf("new consul client err:%s", err.Error())
+        err = fmt.Errorf("new consul client err:%s", err.Error())
+        return
     }
     config.HttpClient.Timeout = time.Second*5
 
@@ -49,16 +51,26 @@ func InitWithRemotePath(path string, data interface{}, remoteAddr string) error 
     kv, _, err := client.KV().Get(path, nil)
     if err != nil {//远端数据查询失败,容错从本地文件获取配置数据
         if localErr := configor.Load(data, localPath); localErr != nil {
-            return fmt.Errorf("load remote config error:%s local config error:%s", err.Error(), localErr.Error())
+            err = fmt.Errorf("load remote config error:%s local config error:%s", err.Error(), localErr.Error())
+            return
         }else {
-            return nil
+            buf,err := ioutil.ReadFile(localPath)
+            if err != nil {
+                err = errors.New("local config file load err:"+err.Error())
+                return
+            }
+            content = buf
+            return
         }
     }
-    if err := ioutil.WriteFile(localPath, kv.Value, os.ModePerm);err != nil {
-        return fmt.Errorf("write file error"+err.Error())
+
+    if err = ioutil.WriteFile(localPath, kv.Value, os.ModePerm);err != nil {
+        err = fmt.Errorf("write file error"+err.Error())
+        return
     }
-    if err := configor.Load(data, localPath); err != nil {
-        return err
+    if err = configor.Load(data, localPath); err != nil {
+        return
     }
-    return nil
+    content = kv.Value
+    return
 }
