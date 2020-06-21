@@ -9,6 +9,7 @@ import (
 	"github.com/lambdaxs/go-server/confu"
 	"github.com/lambdaxs/go-server/driver/mysql_client"
 	"github.com/lambdaxs/go-server/driver/redis_client"
+	"github.com/lambdaxs/go-server/log"
 	"github.com/lambdaxs/go-server/server"
 	"google.golang.org/grpc"
 	"io/ioutil"
@@ -19,9 +20,11 @@ import (
 )
 
 type appServer struct {
-	ServiceName   string
-	HttpSrv       *echo.Echo
-	GRPCSrv       *grpc.Server
+	ServiceName string
+	HttpSrv     *echo.Echo
+	GRPCSrv     *grpc.Server
+	grpcOptions []grpc.ServerOption
+
 	DBMap         map[string]*gorm.DB
 	RedisMap      map[string]*redis.Pool
 	AppConfig     *appConfig
@@ -40,6 +43,7 @@ type appConfig struct {
 		Host string
 		Port int
 	}
+	Log   log.Config
 	Mysql map[string]mysql_client.MysqlDB `toml:"mysql"`
 	Redis map[string]redis_client.RedisDB `toml:"redis"`
 }
@@ -50,6 +54,8 @@ func New(serviceName string) *appServer {
 		ServiceName:   serviceName,
 		HttpSrv:       nil,
 		GRPCSrv:       nil,
+		grpcOptions: []grpc.ServerOption{},
+
 		DBMap:         map[string]*gorm.DB{},
 		RedisMap:      map[string]*redis.Pool{},
 		AppConfig:     &appConfig{},
@@ -59,14 +65,47 @@ func New(serviceName string) *appServer {
 	}
 
 	app.initConfig()
+	app.initLogger()
 	app.initSource()
 	app.initHttpServer()
 	app.initGRPCServer()
 
+	return app
+}
+
+func (app *appServer) Run() {
+
 	//监听信号
 	app.watchExit()
 
-	return app
+	msg := <-app.StopSign
+
+	// 优雅关闭http服务器,默认超时5s
+	if app.HttpSrv != nil {
+		ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
+		if err := app.HttpSrv.Shutdown(ctx); err != nil {
+			fmt.Println("stop http server error:" + err.Error())
+		} else {
+			fmt.Println("stop http server success")
+		}
+	}
+
+	//优雅关闭GRPC服务
+	if app.GRPCSrv != nil {
+		app.GRPCSrv.GracefulStop()
+		fmt.Println("stop GRPC server success")
+	}
+
+	// 优雅关闭数据库资源
+	for _, conn := range app.DBMap {
+		conn.Close()
+	}
+	for _, conn := range app.RedisMap {
+		conn.Close()
+	}
+
+	time.Sleep(time.Millisecond * 500)
+	fmt.Println("stop server:" + msg)
 }
 
 // 加载配置
@@ -92,6 +131,13 @@ func (app *appServer) initConfig() {
 			panic("load remote config err:" + err.Error())
 		}
 		app.ConfigContent = string(buf)
+	}
+}
+
+// 初始化日志输出
+func (app *appServer) initLogger() {
+	if app.AppConfig.Log.FilePath != "" {
+		log.SetLogger(log.NewLogger(app.AppConfig.Log))
 	}
 }
 
@@ -137,6 +183,13 @@ func (app *appServer) initHttpServer() {
 	}
 }
 
+// GRPC server options
+func (app *appServer) SetGRPCOptions(option ...grpc.ServerOption) {
+	for _, opt := range option {
+		app.grpcOptions = append(app.grpcOptions, opt)
+	}
+}
+
 func (app *appServer) initGRPCServer() {
 	//启动GRPC服务器
 	if app.AppConfig.GrpcServer.Port != 0 {
@@ -146,11 +199,10 @@ func (app *appServer) initGRPCServer() {
 			ServiceName: app.ServiceName,
 		}
 
-		// todo GRPC server options
 		go grpcSrv.StartGRPCServer(func(srv *grpc.Server) {
 			app.GRPCSrv = srv
 			app.serverListen <- struct{}{}
-		})
+		}, app.grpcOptions...)
 		fmt.Println(fmt.Sprintf("start grpc server:%s:%d", grpcSrv.Host, grpcSrv.Port))
 		<-app.serverListen
 	}
@@ -163,35 +215,4 @@ func (a *appServer) watchExit() {
 		sig := <-sigs
 		a.StopSign <- sig.String()
 	}()
-}
-
-func (app *appServer) Run() {
-	msg := <-app.StopSign
-
-	// 优雅关闭http服务器,默认超时5s
-	if app.HttpSrv != nil {
-		ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
-		if err := app.HttpSrv.Shutdown(ctx); err != nil {
-			fmt.Println("stop http server error:" + err.Error())
-		} else {
-			fmt.Println("stop http server success")
-		}
-	}
-
-	//优雅关闭GRPC服务
-	if app.GRPCSrv != nil {
-		app.GRPCSrv.GracefulStop()
-		fmt.Println("stop GRPC server success")
-	}
-
-	// 优雅关闭数据库资源
-	for _, conn := range app.DBMap {
-		conn.Close()
-	}
-	for _, conn := range app.RedisMap {
-		conn.Close()
-	}
-
-	time.Sleep(time.Millisecond * 500)
-	fmt.Println("stop server:" + msg)
 }

@@ -27,6 +27,10 @@ func Default() *zap.Logger {
 	return log
 }
 
+func SetLogger(logger *zap.Logger) {
+	log = logger
+}
+
 func NewLogger(cfg Config) *zap.Logger {
 	hook := lumberjack.Logger{
 		Filename:   "",   // 日志文件路径
