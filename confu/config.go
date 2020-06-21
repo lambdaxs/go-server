@@ -17,6 +17,7 @@ func ParseFlag() (string, string){
     var remoteConfigPath string
     flag.StringVar(&configPath, "config", "", "config file path")
     flag.StringVar(&remoteConfigPath, "remote-config", "", "remote config file path")
+    flag.Parse()
     return configPath, remoteConfigPath
 }
 
@@ -54,9 +55,9 @@ func InitWithRemotePath(path string, data interface{}, remoteAddr string) (conte
             err = fmt.Errorf("load remote config error:%s local config error:%s", err.Error(), localErr.Error())
             return
         }else {
-            buf,err := ioutil.ReadFile(localPath)
-            if err != nil {
-                err = errors.New("local config file load err:"+err.Error())
+            buf,IOErr := ioutil.ReadFile(localPath)
+            if IOErr != nil {
+                err = errors.New("local config file load err:"+IOErr.Error())
                 return
             }
             content = buf
