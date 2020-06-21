@@ -11,6 +11,7 @@ import (
 	"github.com/lambdaxs/go-server/driver/redis_client"
 	"github.com/lambdaxs/go-server/log"
 	"github.com/lambdaxs/go-server/server"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"io/ioutil"
 	"os"
@@ -84,16 +85,16 @@ func (app *appServer) Run() {
 	if app.HttpSrv != nil {
 		ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
 		if err := app.HttpSrv.Shutdown(ctx); err != nil {
-			fmt.Println("stop http server error:" + err.Error())
+			log.Default().Error("stop http server error", zap.String("msg", err.Error()))
 		} else {
-			fmt.Println("stop http server success")
+			log.Default().Info("stop http server success")
 		}
 	}
 
 	//优雅关闭GRPC服务
 	if app.GRPCSrv != nil {
 		app.GRPCSrv.GracefulStop()
-		fmt.Println("stop GRPC server success")
+		log.Default().Info("stop GRPC server success")
 	}
 
 	// 优雅关闭数据库资源
@@ -105,7 +106,7 @@ func (app *appServer) Run() {
 	}
 
 	time.Sleep(time.Millisecond * 500)
-	fmt.Println("stop server:" + msg)
+	log.Default().Info("stop server:" + msg)
 }
 
 // 加载配置
@@ -151,7 +152,7 @@ func (app *appServer) initSource() {
 				panic(fmt.Sprintf("db init err:%s %s dsn:%s", err.Error(), name, dbConfig.DSN))
 			}
 			app.DBMap[name] = conn
-			fmt.Println(fmt.Sprintf("init db success:%s", name))
+			log.Default().Info(fmt.Sprintf("init db success:%s", name))
 		}
 	}
 
@@ -160,7 +161,7 @@ func (app *appServer) initSource() {
 		for name, dbConfig := range app.AppConfig.Redis {
 			pool := dbConfig.ConnectRedisPool()
 			app.RedisMap[name] = pool
-			fmt.Println(fmt.Sprintf("init redis success:%s", name))
+			log.Default().Info(fmt.Sprintf("init redis success:%s", name))
 		}
 	}
 }
@@ -178,7 +179,7 @@ func (app *appServer) initHttpServer() {
 			app.HttpSrv = srv
 			app.serverListen <- struct{}{}
 		})
-		fmt.Println(fmt.Sprintf("start http server:%s:%d", httpSrv.Host, httpSrv.Port))
+		log.Default().Info(fmt.Sprintf("start http server:%s:%d", httpSrv.Host, httpSrv.Port))
 		<-app.serverListen
 	}
 }
@@ -203,7 +204,7 @@ func (app *appServer) initGRPCServer() {
 			app.GRPCSrv = srv
 			app.serverListen <- struct{}{}
 		}, app.grpcOptions...)
-		fmt.Println(fmt.Sprintf("start grpc server:%s:%d", grpcSrv.Host, grpcSrv.Port))
+		log.Default().Info(fmt.Sprintf("start grpc server:%s:%d", grpcSrv.Host, grpcSrv.Port))
 		<-app.serverListen
 	}
 }
