@@ -85,7 +85,7 @@ func (app *appServer) Run() {
 	if app.HttpSrv != nil {
 		ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
 		if err := app.HttpSrv.Shutdown(ctx); err != nil {
-			log.Default().Error("stop http server error", zap.String("msg", err.Error()))
+			log.Default().Error("stop http server error", zap.String("error", err.Error()))
 		} else {
 			log.Default().Info("stop http server success")
 		}
