@@ -14,7 +14,7 @@ var (
 	SystemMetric *prometheus.GaugeVec
 )
 
-func init(){
+func init() {
 	ServerMetric = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "",
 		Subsystem: "",
@@ -30,11 +30,11 @@ func init(){
 	}, []string{"type", "path", "code"})
 
 	SystemMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace:   "",
-		Subsystem:   "",
-		Name:        "go_system_info",
-		Help:        "系统数值监控",
-	},[]string{"type","name"})
+		Namespace: "",
+		Subsystem: "",
+		Name:      "go_system_info",
+		Help:      "系统数值监控",
+	}, []string{"type", "name"})
 
 	go startSystemMonitor()
 	//注册监控器
@@ -42,33 +42,32 @@ func init(){
 }
 
 //system monitor
-func startSystemMonitor(){
-	ticker := time.NewTicker(time.Second*10)
+func startSystemMonitor() {
+	ticker := time.NewTicker(time.Second * 10)
 	for range ticker.C {
 		info := GetSystemInfo()
-		SystemMetric.WithLabelValues("cpu","user").Set(info.CPU.User)
-		SystemMetric.WithLabelValues("cpu","system").Set(info.CPU.System)
-		SystemMetric.WithLabelValues("cpu","idle").Set(info.CPU.Idle)
-		SystemMetric.WithLabelValues("cpu","iowait").Set(info.CPU.IOWait)
-		SystemMetric.WithLabelValues("cpu","nice").Set(info.CPU.Nice)
-		SystemMetric.WithLabelValues("cpu","steal").Set(info.CPU.Steal)
+		SystemMetric.WithLabelValues("cpu", "user").Set(info.CPU.User)
+		SystemMetric.WithLabelValues("cpu", "system").Set(info.CPU.System)
+		SystemMetric.WithLabelValues("cpu", "idle").Set(info.CPU.Idle)
+		SystemMetric.WithLabelValues("cpu", "iowait").Set(info.CPU.IOWait)
+		SystemMetric.WithLabelValues("cpu", "nice").Set(info.CPU.Nice)
+		SystemMetric.WithLabelValues("cpu", "steal").Set(info.CPU.Steal)
 
-		SystemMetric.WithLabelValues("mem","usedpercent").Set(info.Mem.UsedPercent)
-		SystemMetric.WithLabelValues("mem","total").Set(float64(info.Mem.Total))
-		SystemMetric.WithLabelValues("mem","used").Set(float64(info.Mem.Used))
-		SystemMetric.WithLabelValues("mem","free").Set(float64(info.Mem.Free))
+		SystemMetric.WithLabelValues("mem", "usedpercent").Set(info.Mem.UsedPercent)
+		SystemMetric.WithLabelValues("mem", "total").Set(float64(info.Mem.Total))
+		SystemMetric.WithLabelValues("mem", "used").Set(float64(info.Mem.Used))
+		SystemMetric.WithLabelValues("mem", "free").Set(float64(info.Mem.Free))
 
-		SystemMetric.WithLabelValues("net","input").Set(float64(info.NetIO.BytesRecv))
-		SystemMetric.WithLabelValues("net","output").Set(float64(info.NetIO.BytesSent))
+		SystemMetric.WithLabelValues("net", "input").Set(float64(info.NetIO.BytesRecv))
+		SystemMetric.WithLabelValues("net", "output").Set(float64(info.NetIO.BytesSent))
 
-		SystemMetric.WithLabelValues("process","fd").Set(float64(info.Process.Fd))
+		SystemMetric.WithLabelValues("process", "fd").Set(float64(info.Process.Fd))
 
-		SystemMetric.WithLabelValues("load","load1").Set(info.Load.Load1)
-		SystemMetric.WithLabelValues("load","load5").Set(info.Load.Load5)
-		SystemMetric.WithLabelValues("load","load15").Set(info.Load.Load15)
+		SystemMetric.WithLabelValues("load", "load1").Set(info.Load.Load1)
+		SystemMetric.WithLabelValues("load", "load5").Set(info.Load.Load5)
+		SystemMetric.WithLabelValues("load", "load15").Set(info.Load.Load15)
 	}
 }
-
 
 func HTTPMonitor(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {

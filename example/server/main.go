@@ -28,7 +28,7 @@ func main() {
 	confu.ParseFlag()
 
 	var port int64
-	flag.Int64Var(&port,"port", 0,"")
+	flag.Int64Var(&port, "port", 0, "")
 	flag.Parse()
 
 	//logger := log.NewLogger(log.Config{
@@ -37,10 +37,10 @@ func main() {
 	//logger.Info("info",zap.String("key", "value"))
 
 	httpSrv := server.HttpServer{
-		Host: "127.0.0.1",
-		Port: int(port),
-		ConsulAddr: "127.0.0.1:8500",
-		ServiceName:"test",
+		Host:        "127.0.0.1",
+		Port:        int(port),
+		ConsulAddr:  "127.0.0.1:8500",
+		ServiceName: "test",
 	}
 
 	httpSrv.StartEchoServer(func(srv *echo.Echo) {
