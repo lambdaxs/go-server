@@ -49,6 +49,12 @@ type appConfig struct {
 	Redis map[string]redis_client.RedisDB `toml:"redis"`
 }
 
+var defaultServer *appServer
+
+func Default() *appServer {
+	return defaultServer
+}
+
 func New(serviceName string) *appServer {
 
 	app := &appServer{
@@ -70,6 +76,8 @@ func New(serviceName string) *appServer {
 	app.initSource()
 	app.initHttpServer()
 	app.initGRPCServer()
+
+	defaultServer = app
 
 	return app
 }
@@ -216,4 +224,17 @@ func (a *appServer) watchExit() {
 		sig := <-sigs
 		a.StopSign <- sig.String()
 	}()
+}
+
+
+func DB(name string) *gorm.DB {
+	return defaultServer.DBMap[name]
+}
+
+func RedisPool(name string) *redis.Pool {
+	return defaultServer.RedisMap[name]
+}
+
+func ConfigContent() string {
+	return defaultServer.ConfigContent
 }
