@@ -11,6 +11,7 @@ import (
 	"github.com/lambdaxs/go-server/driver/redis_client"
 	"github.com/lambdaxs/go-server/log"
 	"github.com/lambdaxs/go-server/server"
+	"github.com/lambdaxs/go-server/server/middleware/monitor"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"io/ioutil"
@@ -39,10 +40,14 @@ type appConfig struct {
 	HttpServer struct {
 		Host string
 		Port int
+		CloseMonitor bool
+		CloseTracer bool
 	}
 	GrpcServer struct {
 		Host string
 		Port int
+		CloseMonitor bool
+        CloseTracer bool
 	}
 	Log   log.Config
 	Mysql map[string]mysql_client.MysqlDB `toml:"mysql"`
@@ -65,8 +70,10 @@ func New(serviceName string) *appServer {
 
 		DBMap:         map[string]*gorm.DB{},
 		RedisMap:      map[string]*redis.Pool{},
+
 		AppConfig:     &appConfig{},
 		ConfigContent: "",
+
 		serverListen:  make(chan struct{}, 1),
 		StopSign:      make(chan string, 1),
 	}
@@ -74,8 +81,6 @@ func New(serviceName string) *appServer {
 	app.initConfig()
 	app.initLogger()
 	app.initSource()
-	app.initHttpServer()
-	app.initGRPCServer()
 
 	defaultServer = app
 
@@ -83,6 +88,10 @@ func New(serviceName string) *appServer {
 }
 
 func (app *appServer) Run() {
+
+    //在启动服务前直接可以通过其他方法注入一些插件
+    app.initHttpServer()
+    app.initGRPCServer()
 
 	//监听信号
 	app.watchExit()
@@ -185,6 +194,15 @@ func (app *appServer) initHttpServer() {
 
 		go httpSrv.StartEchoServer(func(srv *echo.Echo) {
 			app.HttpSrv = srv
+
+			// 开启监控
+			if !app.AppConfig.HttpServer.CloseMonitor {
+				srv.Use(monitor.HTTPMonitor) // 使用中间件
+				srv.GET("/metrics", monitor.StartMonitorServer) // 开启metric接口
+			}
+
+			// 开启链路
+
 			app.serverListen <- struct{}{}
 		})
 		log.Default().Info(fmt.Sprintf("start http server:%s:%d", httpSrv.Host, httpSrv.Port))

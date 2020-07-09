@@ -1,11 +1,14 @@
 package monitor
 
 import (
+	"github.com/lambdaxs/go-server/log"
+	"go.uber.org/zap"
 	"strconv"
 	"time"
 
 	"github.com/labstack/echo"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
@@ -74,11 +77,22 @@ func HTTPMonitor(next echo.HandlerFunc) echo.HandlerFunc {
 		start := time.Now()
 		path := c.Request().URL.String()
 		code := strconv.Itoa(c.Response().Status)
+
 		if err := next(c); err != nil {
+			//记录错误监控
+			ErrorMetric.WithLabelValues("http", path, code).Inc()
+			//记录错误日志
+			log.Default().Warn("http req error", zap.String("code", code), zap.String("path", path))
 			return err
 		}
+
 		//记录tps p99
 		ServerMetric.WithLabelValues("http", path, code).Observe(float64(time.Since(start).Milliseconds()))
 		return nil
 	}
+}
+
+func StartMonitorServer(c echo.Context) error {
+	promhttp.Handler().ServeHTTP(c.Response(), c.Request())
+	return nil
 }
