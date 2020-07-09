@@ -79,7 +79,11 @@ func New(serviceName string) *appServer {
 	}
 
 	app.initConfig()
+
 	app.initLogger()
+	app.initMonitor()
+	app.initTracer()
+
 	app.initSource()
 
 	defaultServer = app
@@ -157,6 +161,16 @@ func (app *appServer) initLogger() {
 	if app.AppConfig.Log.FilePath != "" {
 		log.SetLogger(log.NewLogger(app.AppConfig.Log))
 	}
+}
+
+// 初始化调用链
+func (app *appServer) initTracer() {
+
+}
+
+// 初始化服务监控
+func (app *appServer) initMonitor() {
+
 }
 
 // 加载数据库资源
