@@ -17,7 +17,7 @@ var (
 	SystemMetric *prometheus.GaugeVec
 )
 
-func init() {
+func Init() {
 	ServerMetric = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "",
 		Subsystem: "",
