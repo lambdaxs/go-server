@@ -24,11 +24,11 @@ func (s *SayHelloServer) SayHello(ctx context.Context, req *hello.SayHelloReq) (
 func main() {
 	app := go_server.New("test")
 
-	app.HttpSrv.GET("/", func(c echo.Context) error {
+	app.HttpServer().GET("/", func(c echo.Context) error {
 		return c.JSON(200, "success")
 	})
 
-	hello.RegisterHelloServerServer(app.GRPCSrv, &SayHelloServer{})
+	hello.RegisterHelloServerServer(app.GRPCServer(), &SayHelloServer{})
 
 
 	app.Run()

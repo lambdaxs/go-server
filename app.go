@@ -24,17 +24,18 @@ import (
 
 type appServer struct {
     ServiceName string
-    HttpSrv     *echo.Echo
-    GRPCSrv     *grpc.Server
-    grpcOptions []grpc.ServerOption
-
-    DBMap         map[string]*gorm.DB
-    RedisMap      map[string]*redis.Pool
     AppConfig     *appConfig
     ConfigContent string
 
+    httpSrv     *echo.Echo
+    gRPCSrv     *grpc.Server
+    grpcOptions []grpc.ServerOption
+
+    dbMap         map[string]*gorm.DB
+    redisMap      map[string]*redis.Pool
+
     serverListen chan struct{}
-    StopSign     chan string
+    stopSign     chan string
 }
 
 type appConfig struct {
@@ -76,18 +77,18 @@ func New(serviceName string) *appServer {
 
     app := &appServer{
         ServiceName: serviceName,
-        HttpSrv:     nil,
-        GRPCSrv:     nil,
-        grpcOptions: []grpc.ServerOption{},
-
-        DBMap:    map[string]*gorm.DB{},
-        RedisMap: map[string]*redis.Pool{},
-
         AppConfig:     &appConfig{},
         ConfigContent: "",
 
+        httpSrv:     nil,
+        gRPCSrv:     nil,
+        grpcOptions: []grpc.ServerOption{},
+
+        dbMap:    map[string]*gorm.DB{},
+        redisMap: map[string]*redis.Pool{},
+
         serverListen: make(chan struct{}, 1),
-        StopSign:     make(chan string, 1),
+        stopSign:     make(chan string, 1),
     }
 
     app.initConfig()
@@ -105,21 +106,33 @@ func New(serviceName string) *appServer {
     return app
 }
 
-func (app *appServer) Run() {
+func (app *appServer)HttpServer() *echo.Echo {
+    if defaultServer.httpSrv == nil {
+        app.initHttpServer()
+        return defaultServer.httpSrv
+    }
+    return defaultServer.httpSrv
+}
 
-    //在启动服务前直接可以通过其他方法注入一些插件
-    app.initHttpServer()
-    app.initGRPCServer()
+func (app *appServer)GRPCServer() *grpc.Server {
+    if defaultServer.gRPCSrv == nil {
+        app.initGRPCServer()
+        return defaultServer.gRPCSrv
+    }
+    return defaultServer.gRPCSrv
+}
+
+func (app *appServer) Run() {
 
     //监听信号
     app.watchExit()
 
-    msg := <-app.StopSign
+    msg := <-app.stopSign
 
     // 优雅关闭http服务器,默认超时5s
-    if app.HttpSrv != nil {
+    if app.httpSrv != nil {
         ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
-        if err := app.HttpSrv.Shutdown(ctx); err != nil {
+        if err := app.httpSrv.Shutdown(ctx); err != nil {
             log.Default().Error("stop http server error", zap.String("error", err.Error()))
         } else {
             log.Default().Info("stop http server success")
@@ -127,17 +140,17 @@ func (app *appServer) Run() {
     }
 
     //优雅关闭GRPC服务
-    if app.GRPCSrv != nil {
-        app.GRPCSrv.GracefulStop()
+    if app.gRPCSrv != nil {
+        app.gRPCSrv.GracefulStop()
         log.Default().Info("stop GRPC server success")
     }
 
     // 优雅关闭数据库资源
-    for _, conn := range app.DBMap {
-        conn.Close()
+    for _, conn := range app.dbMap {
+        _ = conn.Close()
     }
-    for _, conn := range app.RedisMap {
-        conn.Close()
+    for _, conn := range app.redisMap {
+        _ = conn.Close()
     }
 
     time.Sleep(time.Millisecond * 500)
@@ -199,7 +212,7 @@ func (app *appServer) initSource() {
             if err != nil {
                 panic(fmt.Sprintf("db init err:%s %s dsn:%s", err.Error(), name, dbConfig.DSN))
             }
-            app.DBMap[name] = conn
+            app.dbMap[name] = conn
             log.Default().Info(fmt.Sprintf("init db success:%s", name))
         }
     }
@@ -210,7 +223,7 @@ func (app *appServer) initSource() {
             if err != nil {
                 panic(fmt.Sprintf("db init err:%s %s dsn:%s", err.Error(), name, dbConfig.DSN))
             }
-            app.DBMap[name] = conn
+            app.dbMap[name] = conn
             log.Default().Info(fmt.Sprintf("init db success:%s", name))
         }
     }
@@ -219,7 +232,7 @@ func (app *appServer) initSource() {
     if len(app.AppConfig.Redis) != 0 {
         for name, dbConfig := range app.AppConfig.Redis {
             pool := dbConfig.ConnectRedisPool()
-            app.RedisMap[name] = pool
+            app.redisMap[name] = pool
             log.Default().Info(fmt.Sprintf("init redis success:%s", name))
         }
     }
@@ -235,7 +248,7 @@ func (app *appServer) initHttpServer() {
         }
 
         go httpSrv.StartEchoServer(func(srv *echo.Echo) {
-            app.HttpSrv = srv
+            app.httpSrv = srv
 
             // todo 开启日志
             if !app.AppConfig.Log.HttpClose {
@@ -277,7 +290,7 @@ func (app *appServer) initGRPCServer() {
         }
 
         go grpcSrv.StartGRPCServer(func(srv *grpc.Server) {
-            app.GRPCSrv = srv
+            app.gRPCSrv = srv
 
             // todo 开启日志
             if !app.AppConfig.Log.GrpcClose {
@@ -306,16 +319,16 @@ func (a *appServer) watchExit() {
     signal.Notify(sigs, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
     go func() {
         sig := <-sigs
-        a.StopSign <- sig.String()
+        a.stopSign <- sig.String()
     }()
 }
 
-func DB(name string) *gorm.DB {
-    return defaultServer.DBMap[name]
+func Model(name string) *gorm.DB {
+    return defaultServer.dbMap[name]
 }
 
 func RedisPool(name string) *redis.Pool {
-    return defaultServer.RedisMap[name]
+    return defaultServer.redisMap[name]
 }
 
 func ConfigContent() string {
