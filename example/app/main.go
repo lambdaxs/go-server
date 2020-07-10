@@ -10,6 +10,7 @@ import (
 
 //SayHelloServer server
 type SayHelloServer struct {
+	
 }
 
 //SayHello hanler
