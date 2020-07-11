@@ -334,3 +334,11 @@ func RedisPool(name string) *redis.Pool {
 func ConfigContent() string {
     return defaultServer.ConfigContent
 }
+
+func HttpServer() *echo.Echo {
+    return defaultServer.HttpServer()
+}
+
+func GRPCServer() *grpc.Server {
+    return defaultServer.GRPCServer()
+}

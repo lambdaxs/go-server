@@ -31,12 +31,20 @@ func main() {
     app := go_server.New("test")
 
     psqlDB := go_server.Model("test")
+    mysqlDB := go_server.Model("db")
 
-    app.HttpServer().GET("/", func(c echo.Context) error {
+    srv := app.HttpServer()
+    srv.GET("/", func(c echo.Context) error {
     	list := make([]user, 0)
-        psqlDB.Table("public.user").Find(&list)
+        psqlDB.Table("user").Find(&list)
         return c.JSON(200, list)
     })
+
+	srv.GET("/mysql", func(c echo.Context) error {
+		list := make([]user, 0)
+		mysqlDB.Table("user").Find(&list)
+		return c.JSON(200, list)
+	})
 
     hello.RegisterHelloServerServer(app.GRPCServer(), &SayHelloServer{})
 

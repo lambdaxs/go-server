@@ -6,6 +6,54 @@
 - 监控/日志/链路
 - 常用数据库驱动
 
+### 配置管理
+
+- consul
+- admin
+- config version
+
+### 日志管理
+
+- EFK
+- kafka
+- agent monitor
+
+### 服务监控
+
+- prometheus
+- grafna
+- consul + confd
+
+### 链路监控
+
+- jaeger + agent + collector
+
+### 服务注册
+
+- consul
+- agent health
+- service health
+- cluster alert
+
+### 机器和部署管理
+
+- CMDB
+- ansible + Makefile + image version
+
+
+### 用户管理
+
+- user
+- group
+- auth grant
+
+### 测试
+
+- sonar
+- unit
+
+
+
 ## Example
 
 ```go

@@ -12,7 +12,7 @@
 
 [mysql]
     [mysql.db]
-        dsn = "root:123456@tcp(127.0.0.1:3306)/hiolabsDB?charset=utf8&parseTime=True&loc=Local&readTimeout=3s&writeTimeout=3s"
+        dsn = "root:123456@tcp(127.0.0.1:3306)/dev?charset=utf8&parseTime=True&loc=Local&readTimeout=3s&writeTimeout=3s"
         log = true
 
 [psql]
