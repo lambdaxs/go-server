@@ -1,10 +1,10 @@
 [httpServer]
-    Host = "127.0.0.1"
-    Port = 8080
+    host = "127.0.0.1"
+    port = 8080
 
 [grpcServer]
-    Host = "127.0.0.1"
-    Port = 8081
+    host = "127.0.0.1"
+    port = 8081
 
 [log]
     development = true
@@ -13,7 +13,13 @@
 [mysql]
     [mysql.db]
         dsn = "root:123456@tcp(127.0.0.1:3306)/hiolabsDB?charset=utf8&parseTime=True&loc=Local&readTimeout=3s&writeTimeout=3s"
-         log = true
+        log = true
+
+[psql]
+    [psql.test]
+        dsn = "host=127.0.0.1 port=5432 sslmode=disable user=postgres password=123456 dbname=test"
+        log = true
+
 [redis]
     [redis.cache]
         dsn = "127.0.0.1:6379"
