@@ -6,6 +6,7 @@ import (
     "github.com/labstack/echo"
     go_server "github.com/lambdaxs/go-server"
     hello "github.com/lambdaxs/go-server/example/discover/pb"
+    "google.golang.org/grpc"
 )
 
 //SayHelloServer server
@@ -46,7 +47,10 @@ func main() {
 		return c.JSON(200, list)
 	})
 
-    hello.RegisterHelloServerServer(app.GRPCServer(), &SayHelloServer{})
+    app.RegisterGRPCServer(func(srv *grpc.Server) {
+        hello.RegisterHelloServerServer(srv, &SayHelloServer{})
+    })
+
 
     app.Run()
 }

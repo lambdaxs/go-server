@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type MysqlDB struct {
+type MysqlConfig struct {
 	DSN          string        //username:password@tcp(127.0.0.1:3306)/dbname?charset=utf8&parseTime=True&loc=Local&readTimeout=3s&writeTime=3s
 	MaxIdle      int           //5
 	MaxLifeTime  time.Duration //60s
@@ -19,7 +19,7 @@ type MysqlDB struct {
 }
 
 //创建gorm连接
-func (g *MysqlDB) ConnectGORMDB() (db *gorm.DB, err error) {
+func (g *MysqlConfig) Connect() (db *gorm.DB, err error) {
 	if g.MaxIdle == 0 {
 		g.MaxIdle = 5
 	}

@@ -8,7 +8,7 @@
 
 [log]
     development = true
-    filePath = "/tmp/a.log"
+    filePath = "./a.log"
 
 [mysql]
     [mysql.db]

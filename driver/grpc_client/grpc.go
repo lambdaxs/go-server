@@ -13,7 +13,7 @@ type GRPCClient struct {
 }
 
 //获取grpc连接
-func (g *GRPCClient) GetConn() (*grpc.ClientConn, error) {
+func (g *GRPCClient) Connect() (*grpc.ClientConn, error) {
 	schema, err := discover.GetConnSchema(g.ConsulAddr, g.ServiceName)
 	if err != nil {
 		panic(err)

@@ -53,6 +53,8 @@ func (h *HttpServer) StartEchoServer(serverFunc func(srv *echo.Echo)) {
 		"⇨ start http server",
 		zap.String("address", address))
 	if err := app.Start(address); err != nil {
-		fmt.Println("start echo server error:" + err.Error())
+		if err.Error() != "http: Server closed" {//正常关闭http server
+			fmt.Println("start echo server error:" + err.Error())
+		}
 	}
 }

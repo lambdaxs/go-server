@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type RedisDB struct {
+type RedisConfig struct {
 	DSN         string        //"127.0.0.1:6379"
 	Password    string        //""
 	DB          int           // 0
@@ -19,7 +19,7 @@ type RedisDB struct {
 	KeepAlive    time.Duration //5min
 }
 
-func (r *RedisDB) ConnectRedisPool() (pool *redis.Pool) {
+func (r *RedisConfig) Connect() (pool *redis.Pool) {
 	if r.MaxIdle == 0 {
 		r.MaxIdle = 100
 	}

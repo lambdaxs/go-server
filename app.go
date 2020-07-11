@@ -18,24 +18,30 @@ import (
     "io/ioutil"
     "os"
     "os/signal"
+    "reflect"
     "syscall"
     "time"
 )
 
 type appServer struct {
-    ServiceName string
+    ServiceName   string
     AppConfig     *appConfig
     ConfigContent string
 
     httpSrv     *echo.Echo
     gRPCSrv     *grpc.Server
-    grpcOptions []grpc.ServerOption
 
-    dbMap         map[string]*gorm.DB
-    redisMap      map[string]*redis.Pool
+    dbMap    map[string]*gorm.DB
+    redisMap map[string]*redis.Pool
 
     serverListen chan struct{}
     stopSign     chan string
+}
+
+type logConfig struct {
+    log.Config
+    HttpClose bool
+    GrpcClose bool
 }
 
 type appConfig struct {
@@ -47,12 +53,7 @@ type appConfig struct {
         Host string
         Port int
     }
-    Log struct {
-        log.Config
-        Enable    bool
-        HttpClose bool
-        GrpcClose bool
-    }
+    Log logConfig
     Monitor struct {
         SystemClose bool
         HttpClose   bool
@@ -62,9 +63,9 @@ type appConfig struct {
         HttpClose bool
         GrpcClose bool
     }
-    Mysql map[string]mysql_client.MysqlDB     `toml:"mysql"`
-    Psql map[string]psql_client.PsqlConfig `toml:"psql"`
-    Redis map[string]redis_client.RedisDB     `toml:"redis"`
+    Mysql map[string]mysql_client.MysqlConfig `toml:"mysql"`
+    Psql  map[string]psql_client.PsqlConfig   `toml:"psql"`
+    Redis map[string]redis_client.RedisConfig `toml:"redis"`
 }
 
 var defaultServer *appServer
@@ -76,13 +77,12 @@ func Default() *appServer {
 func New(serviceName string) *appServer {
 
     app := &appServer{
-        ServiceName: serviceName,
+        ServiceName:   serviceName,
         AppConfig:     &appConfig{},
         ConfigContent: "",
 
         httpSrv:     nil,
         gRPCSrv:     nil,
-        grpcOptions: []grpc.ServerOption{},
 
         dbMap:    map[string]*gorm.DB{},
         redisMap: map[string]*redis.Pool{},
@@ -106,7 +106,7 @@ func New(serviceName string) *appServer {
     return app
 }
 
-func (app *appServer)HttpServer() *echo.Echo {
+func (app *appServer) HttpServer() *echo.Echo {
     if defaultServer.httpSrv == nil {
         app.initHttpServer()
         return defaultServer.httpSrv
@@ -114,9 +114,9 @@ func (app *appServer)HttpServer() *echo.Echo {
     return defaultServer.httpSrv
 }
 
-func (app *appServer)GRPCServer() *grpc.Server {
+func (app *appServer) RegisterGRPCServer(reg func(srv *grpc.Server),opts ...grpc.ServerOption) *grpc.Server {
     if defaultServer.gRPCSrv == nil {
-        app.initGRPCServer()
+        app.initGRPCServer(reg, opts...)
         return defaultServer.gRPCSrv
     }
     return defaultServer.gRPCSrv
@@ -185,7 +185,7 @@ func (app *appServer) initConfig() {
 
 // 初始化日志输出
 func (app *appServer) initLogger() {
-    if app.AppConfig.Log.Enable {
+    if !reflect.DeepEqual(app.AppConfig.Log, logConfig{}) {
         log.SetLogger(log.NewLogger(app.AppConfig.Log.Config))
     }
 }
@@ -208,7 +208,7 @@ func (app *appServer) initSource() {
     //初始化数据库
     if len(app.AppConfig.Mysql) != 0 {
         for name, dbConfig := range app.AppConfig.Mysql {
-            conn, err := dbConfig.ConnectGORMDB()
+            conn, err := dbConfig.Connect()
             if err != nil {
                 panic(fmt.Sprintf("db init err:%s %s dsn:%s", err.Error(), name, dbConfig.DSN))
             }
@@ -231,7 +231,7 @@ func (app *appServer) initSource() {
     //初始化redis
     if len(app.AppConfig.Redis) != 0 {
         for name, dbConfig := range app.AppConfig.Redis {
-            pool := dbConfig.ConnectRedisPool()
+            pool := dbConfig.Connect()
             app.redisMap[name] = pool
             log.Default().Info(fmt.Sprintf("init redis success:%s", name))
         }
@@ -246,6 +246,7 @@ func (app *appServer) initHttpServer() {
             Port:        app.AppConfig.HttpServer.Port,
             ServiceName: app.ServiceName,
         }
+
 
         go httpSrv.StartEchoServer(func(srv *echo.Echo) {
             app.httpSrv = srv
@@ -268,19 +269,13 @@ func (app *appServer) initHttpServer() {
 
             app.serverListen <- struct{}{}
         })
+
         log.Default().Info(fmt.Sprintf("start http server:%s:%d", httpSrv.Host, httpSrv.Port))
         <-app.serverListen
     }
 }
 
-// GRPC server options
-func (app *appServer) SetGRPCOptions(option ...grpc.ServerOption) {
-    for _, opt := range option {
-        app.grpcOptions = append(app.grpcOptions, opt)
-    }
-}
-
-func (app *appServer) initGRPCServer() {
+func (app *appServer) initGRPCServer(register func(srv *grpc.Server),opts ...grpc.ServerOption) {
     //启动GRPC服务器
     if app.AppConfig.GrpcServer.Port != 0 {
         grpcSrv := server.GRPCServer{
@@ -291,6 +286,10 @@ func (app *appServer) initGRPCServer() {
 
         go grpcSrv.StartGRPCServer(func(srv *grpc.Server) {
             app.gRPCSrv = srv
+
+            if register != nil {
+                register(srv)
+            }
 
             // todo 开启日志
             if !app.AppConfig.Log.GrpcClose {
@@ -308,7 +307,8 @@ func (app *appServer) initGRPCServer() {
             }
 
             app.serverListen <- struct{}{}
-        }, app.grpcOptions...)
+        }, opts...)
+
         log.Default().Info(fmt.Sprintf("start grpc server:%s:%d", grpcSrv.Host, grpcSrv.Port))
         <-app.serverListen
     }
@@ -340,5 +340,5 @@ func HttpServer() *echo.Echo {
 }
 
 func GRPCServer() *grpc.Server {
-    return defaultServer.GRPCServer()
+    return defaultServer.gRPCSrv
 }
