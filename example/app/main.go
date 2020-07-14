@@ -28,8 +28,21 @@ type user struct {
     Age  int64  `json:"age"`
 }
 
+type ConfigData struct {
+    Server struct{
+        Name string
+    }
+}
+
 func main() {
     app := go_server.New("test")
+
+    config := &ConfigData{}
+    if err := app.ParseConfig(config);err != nil {
+        panic(err)
+    }
+
+    fmt.Println(config.Server.Name)
 
     psqlDB := go_server.Model("test")
     mysqlDB := go_server.Model("db")

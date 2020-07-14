@@ -3,6 +3,7 @@ module github.com/lambdaxs/go-server
 go 1.13
 
 require (
+	github.com/BurntSushi/toml v0.3.1
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/bluele/gcache v0.0.0-20190518031135-bc40bd653833
 	github.com/go-ole/go-ole v1.2.4 // indirect

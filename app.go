@@ -3,6 +3,7 @@ package go_server
 import (
     "context"
     "fmt"
+    "github.com/BurntSushi/toml"
     "github.com/gomodule/redigo/redis"
     "github.com/jinzhu/gorm"
     "github.com/labstack/echo"
@@ -38,12 +39,6 @@ type appServer struct {
     stopSign     chan string
 }
 
-type logConfig struct {
-    log.Config
-    HttpClose bool
-    GrpcClose bool
-}
-
 type appConfig struct {
     HttpServer struct {
         Host string
@@ -66,6 +61,12 @@ type appConfig struct {
     Mysql map[string]mysql_client.MysqlConfig `toml:"mysql"`
     Psql  map[string]psql_client.PsqlConfig   `toml:"psql"`
     Redis map[string]redis_client.RedisConfig `toml:"redis"`
+}
+
+type logConfig struct {
+    log.Config
+    HttpClose bool
+    GrpcClose bool
 }
 
 var defaultServer *appServer
@@ -321,6 +322,19 @@ func (a *appServer) watchExit() {
         sig := <-sigs
         a.stopSign <- sig.String()
     }()
+}
+
+// todo 支持yaml json 格式配置
+func (a *appServer)ParseConfig(i interface{}) error {
+    _,err := toml.Decode(a.ConfigContent, i)
+    if err != nil {
+        return err
+    }
+    return nil
+}
+
+func ParseConfig(i interface{}) error {
+    return defaultServer.ParseConfig(i)
 }
 
 func Model(name string) *gorm.DB {
