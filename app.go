@@ -5,15 +5,23 @@ import (
     "fmt"
     "github.com/BurntSushi/toml"
     "github.com/gomodule/redigo/redis"
+    grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
     "github.com/jinzhu/gorm"
-    "github.com/labstack/echo"
-    "github.com/lambdaxs/go-server/confu"
+
+    "github.com/lambdaxs/go-server/govern/confu"
+    "github.com/lambdaxs/go-server/govern/log"
+    "github.com/lambdaxs/go-server/govern/monitor"
+
     "github.com/lambdaxs/go-server/driver/mysql_client"
     "github.com/lambdaxs/go-server/driver/psql_client"
     "github.com/lambdaxs/go-server/driver/redis_client"
-    "github.com/lambdaxs/go-server/log"
+
+    "github.com/grpc-ecosystem/go-grpc-middleware"
+    "github.com/lambdaxs/go-server/middleware"
+
+    "github.com/labstack/echo"
     "github.com/lambdaxs/go-server/server"
-    "github.com/lambdaxs/go-server/server/middleware/monitor"
+
     "go.uber.org/zap"
     "google.golang.org/grpc"
     "io/ioutil"
@@ -29,8 +37,8 @@ type appServer struct {
     AppConfig     *appConfig
     ConfigContent string
 
-    httpSrv     *echo.Echo
-    gRPCSrv     *grpc.Server
+    httpSrv *echo.Echo
+    gRPCSrv *grpc.Server
 
     dbMap    map[string]*gorm.DB
     redisMap map[string]*redis.Pool
@@ -41,20 +49,23 @@ type appServer struct {
 
 type appConfig struct {
     HttpServer struct {
-        Host string
-        Port int
+        Host       string
+        Port       int
+        ConsulAddr string
     }
     GrpcServer struct {
-        Host string
-        Port int
+        Host       string
+        Port       int
+        ConsulAddr string
     }
-    Log logConfig
+    Log     logConfig
     Monitor struct {
         SystemClose bool
         HttpClose   bool
         GrpcClose   bool
     }
     Tracer struct {
+        AgentAddr string
         HttpClose bool
         GrpcClose bool
     }
@@ -82,8 +93,8 @@ func New(serviceName string) *appServer {
         AppConfig:     &appConfig{},
         ConfigContent: "",
 
-        httpSrv:     nil,
-        gRPCSrv:     nil,
+        httpSrv: nil,
+        gRPCSrv: nil,
 
         dbMap:    map[string]*gorm.DB{},
         redisMap: map[string]*redis.Pool{},
@@ -115,7 +126,7 @@ func (app *appServer) HttpServer() *echo.Echo {
     return defaultServer.httpSrv
 }
 
-func (app *appServer) RegisterGRPCServer(reg func(srv *grpc.Server),opts ...grpc.ServerOption) *grpc.Server {
+func (app *appServer) RegisterGRPCServer(reg func(srv *grpc.Server), opts ...grpc.ServerOption) *grpc.Server {
     if defaultServer.gRPCSrv == nil {
         app.initGRPCServer(reg, opts...)
         return defaultServer.gRPCSrv
@@ -125,12 +136,12 @@ func (app *appServer) RegisterGRPCServer(reg func(srv *grpc.Server),opts ...grpc
 
 func (app *appServer) Run() {
 
-    //监听信号
+    //watch system signal
     app.watchExit()
 
     msg := <-app.stopSign
 
-    // 优雅关闭http服务器,默认超时5s
+    //  graceful close server, default timeout 5s
     if app.httpSrv != nil {
         ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
         if err := app.httpSrv.Shutdown(ctx); err != nil {
@@ -140,13 +151,13 @@ func (app *appServer) Run() {
         }
     }
 
-    //优雅关闭GRPC服务
+    // graceful close GRPC server
     if app.gRPCSrv != nil {
         app.gRPCSrv.GracefulStop()
         log.Default().Info("stop GRPC server success")
     }
 
-    // 优雅关闭数据库资源
+    // close conn fro database source
     for _, conn := range app.dbMap {
         _ = conn.Close()
     }
@@ -158,9 +169,9 @@ func (app *appServer) Run() {
     log.Default().Info("stop server:" + msg)
 }
 
-// 加载配置
+// load config
 func (app *appServer) initConfig() {
-    //初始化配置 会引用flag.Parse()方法
+    //init config  will be use flag.Parse() function
     configPath, remoteConfigPath := confu.ParseFlag()
     if configPath != "" {
         if err := confu.InitWithFilePath(configPath, app.AppConfig); err != nil {
@@ -174,7 +185,7 @@ func (app *appServer) initConfig() {
         app.ConfigContent = string(buf)
     }
 
-    //加载远端配置
+    //load remote config from consul
     if remoteConfigPath != "" {
         buf, err := confu.InitWithRemotePath(remoteConfigPath, app.AppConfig, "")
         if err != nil {
@@ -184,29 +195,28 @@ func (app *appServer) initConfig() {
     }
 }
 
-// 初始化日志输出
+// init logger
 func (app *appServer) initLogger() {
     if !reflect.DeepEqual(app.AppConfig.Log, logConfig{}) {
         log.SetLogger(log.NewLogger(app.AppConfig.Log.Config))
     }
 }
 
-// 初始化服务监控
+// init system monitor
 func (app *appServer) initMonitor() {
-    // 默认开启系统监控
     if !app.AppConfig.Monitor.SystemClose {
-        monitor.Init()
+        middleware.InitSystemMonitor()
     }
 }
 
-// 初始化调用链
+// init trace
 func (app *appServer) initTracer() {
-    // todo 初始化调用链条
+    // todo
 }
 
-// 加载数据库资源
+// load database source
 func (app *appServer) initSource() {
-    //初始化数据库
+    // mysql
     if len(app.AppConfig.Mysql) != 0 {
         for name, dbConfig := range app.AppConfig.Mysql {
             conn, err := dbConfig.Connect()
@@ -218,6 +228,7 @@ func (app *appServer) initSource() {
         }
     }
 
+    // postgresql
     if len(app.AppConfig.Psql) != 0 {
         for name, dbConfig := range app.AppConfig.Psql {
             conn, err := dbConfig.Connect()
@@ -229,7 +240,7 @@ func (app *appServer) initSource() {
         }
     }
 
-    //初始化redis
+    // redis
     if len(app.AppConfig.Redis) != 0 {
         for name, dbConfig := range app.AppConfig.Redis {
             pool := dbConfig.Connect()
@@ -240,33 +251,39 @@ func (app *appServer) initSource() {
 }
 
 func (app *appServer) initHttpServer() {
-    //启动HTTP服务器
+    //start HTTP server
     if app.AppConfig.HttpServer.Port != 0 {
         httpSrv := server.HttpServer{
             Host:        app.AppConfig.HttpServer.Host,
             Port:        app.AppConfig.HttpServer.Port,
+            ConsulAddr:  app.AppConfig.HttpServer.ConsulAddr,
             ServiceName: app.ServiceName,
         }
-
 
         go httpSrv.StartEchoServer(func(srv *echo.Echo) {
             app.httpSrv = srv
 
-            // todo 开启日志
+            // log
             if !app.AppConfig.Log.HttpClose {
-
+                srv.Use(middleware.HttpServerLogger())
+                //支持动态调整日志等级
+                srv.GET("/govern/log/get", log.Default().LogLevel)
+                srv.PUT("/govern/log/update", log.Default().LogLevel)
             }
 
-            // 开启监控
+            // monitor
             if !app.AppConfig.Monitor.HttpClose {
-                srv.Use(monitor.HTTPMonitor)                    // 使用中间件
-                srv.GET("/metrics", monitor.StartMonitorServer) // 开启metric接口
+                srv.Use(middleware.HttpServerMonitor())
+                srv.GET("/govern/metrics", monitor.StartMonitorServer)
             }
 
-            // todo 开启链路
+            // todo open trace
             if !app.AppConfig.Tracer.HttpClose {
 
             }
+
+            // default open recover
+            srv.Use(middleware.HttpServerRecovery())
 
             app.serverListen <- struct{}{}
         })
@@ -276,14 +293,35 @@ func (app *appServer) initHttpServer() {
     }
 }
 
-func (app *appServer) initGRPCServer(register func(srv *grpc.Server),opts ...grpc.ServerOption) {
-    //启动GRPC服务器
+func (app *appServer) initGRPCServer(register func(srv *grpc.Server), opts ...grpc.ServerOption) {
+    // start GRPC server
     if app.AppConfig.GrpcServer.Port != 0 {
         grpcSrv := server.GRPCServer{
             Host:        app.AppConfig.GrpcServer.Host,
             Port:        app.AppConfig.GrpcServer.Port,
             ServiceName: app.ServiceName,
         }
+
+        middlewareList := make([]grpc.UnaryServerInterceptor, 0)
+        // log
+        if !app.AppConfig.Log.GrpcClose {
+            middlewareList = append(middlewareList, middleware.GRPCServerLogger())
+        }
+
+        // monitor
+        if !app.AppConfig.Monitor.GrpcClose {
+            middlewareList = append(middlewareList, middleware.GRPCServerMonitor())
+        }
+
+        // 开启链路 todo 明确标示头
+        if !app.AppConfig.Tracer.GrpcClose {
+            middlewareList = append(middlewareList, middleware.GRPCServerTracer())
+        }
+
+        //添加recovery
+        middlewareList = append(middlewareList, middleware.GRPCServerRecovery())
+
+        opts = append(opts, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(middlewareList...)))
 
         go grpcSrv.StartGRPCServer(func(srv *grpc.Server) {
             app.gRPCSrv = srv
@@ -292,19 +330,9 @@ func (app *appServer) initGRPCServer(register func(srv *grpc.Server),opts ...grp
                 register(srv)
             }
 
-            // todo 开启日志
-            if !app.AppConfig.Log.GrpcClose {
-
-            }
-
-            // todo 开启监控
+            // register grpc monitor
             if !app.AppConfig.Monitor.GrpcClose {
-
-            }
-
-            // todo 开启链路
-            if !app.AppConfig.Tracer.GrpcClose {
-
+                grpc_prometheus.Register(srv)
             }
 
             app.serverListen <- struct{}{}
@@ -324,9 +352,9 @@ func (a *appServer) watchExit() {
     }()
 }
 
-// todo 支持yaml json 格式配置
-func (a *appServer)ParseConfig(i interface{}) error {
-    _,err := toml.Decode(a.ConfigContent, i)
+// todo support yaml json format
+func (a *appServer) ParseConfig(i interface{}) error {
+    _, err := toml.Decode(a.ConfigContent, i)
     if err != nil {
         return err
     }

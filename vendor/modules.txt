@@ -8,6 +8,8 @@ github.com/armon/go-metrics
 github.com/beorn7/perks/quantile
 # github.com/bluele/gcache v0.0.0-20190518031135-bc40bd653833
 github.com/bluele/gcache
+# github.com/dgrijalva/jwt-go v3.2.0+incompatible
+github.com/dgrijalva/jwt-go
 # github.com/emirpasic/gods v1.12.0
 github.com/emirpasic/gods/containers
 github.com/emirpasic/gods/maps
@@ -36,15 +38,28 @@ github.com/gogo/protobuf/protoc-gen-gogo/descriptor
 # github.com/golang/mock v1.3.1
 github.com/golang/mock/gomock
 # github.com/golang/protobuf v1.3.2
+github.com/golang/protobuf/jsonpb
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/protoc-gen-go/descriptor
 github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
+github.com/golang/protobuf/ptypes/struct
 github.com/golang/protobuf/ptypes/timestamp
 # github.com/gomodule/redigo v2.0.0+incompatible
 github.com/gomodule/redigo/internal
 github.com/gomodule/redigo/redis
+# github.com/grpc-ecosystem/go-grpc-middleware v1.2.0
+github.com/grpc-ecosystem/go-grpc-middleware
+github.com/grpc-ecosystem/go-grpc-middleware/logging
+github.com/grpc-ecosystem/go-grpc-middleware/logging/zap
+github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap
+github.com/grpc-ecosystem/go-grpc-middleware/recovery
+github.com/grpc-ecosystem/go-grpc-middleware/tags
+github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing
+github.com/grpc-ecosystem/go-grpc-middleware/util/metautils
+# github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
+github.com/grpc-ecosystem/go-grpc-prometheus
 # github.com/hashicorp/consul/api v1.3.0
 github.com/hashicorp/consul/api
 # github.com/hashicorp/go-cleanhttp v0.5.1
@@ -73,9 +88,12 @@ github.com/json-iterator/go
 github.com/konsorten/go-windows-terminal-sequences
 # github.com/labstack/echo v3.3.10+incompatible
 github.com/labstack/echo
+github.com/labstack/echo/middleware
 # github.com/labstack/gommon v0.3.0
+github.com/labstack/gommon/bytes
 github.com/labstack/gommon/color
 github.com/labstack/gommon/log
+github.com/labstack/gommon/random
 # github.com/lambdaxs/rocketmq-client-go v1.3.1
 github.com/lambdaxs/rocketmq-client-go
 github.com/lambdaxs/rocketmq-client-go/consumer
@@ -119,6 +137,10 @@ github.com/nats-io/nuid
 # github.com/nats-io/stan.go v0.6.0
 github.com/nats-io/stan.go
 github.com/nats-io/stan.go/pb
+# github.com/opentracing/opentracing-go v1.1.0
+github.com/opentracing/opentracing-go
+github.com/opentracing/opentracing-go/ext
+github.com/opentracing/opentracing-go/log
 # github.com/pkg/errors v0.8.1
 github.com/pkg/errors
 # github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829
@@ -150,7 +172,7 @@ github.com/shirou/gopsutil/load
 github.com/shirou/gopsutil/mem
 github.com/shirou/gopsutil/net
 github.com/shirou/gopsutil/process
-# github.com/sirupsen/logrus v1.4.1
+# github.com/sirupsen/logrus v1.4.2
 github.com/sirupsen/logrus
 # github.com/streadway/amqp v0.0.0-20200108173154-1c71cc93ed71
 github.com/streadway/amqp

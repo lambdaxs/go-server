@@ -7,8 +7,8 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/lambdaxs/go-server/discover"
-	"github.com/lambdaxs/go-server/lib/local"
-	"github.com/lambdaxs/go-server/log"
+	"github.com/lambdaxs/go-server/util/local"
+	"github.com/lambdaxs/go-server/govern/log"
 	"go.uber.org/zap"
 )
 

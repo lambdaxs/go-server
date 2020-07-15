@@ -6,12 +6,15 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/bluele/gcache v0.0.0-20190518031135-bc40bd653833
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-playground/locales v0.13.0
 	github.com/go-playground/universal-translator v0.17.0
 	github.com/go-playground/validator/v10 v10.1.0
 	github.com/golang/protobuf v1.3.2
 	github.com/gomodule/redigo v2.0.0+incompatible
+	github.com/grpc-ecosystem/go-grpc-middleware v1.2.0
+	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/hashicorp/consul/api v1.3.0
 	github.com/isayme/go-amqp-reconnect v0.0.0-20180930040740-e71660afb5ca
 	github.com/jinzhu/configor v1.1.1
