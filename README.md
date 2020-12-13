@@ -105,7 +105,7 @@ func (s *SayHelloServer) SayHello(ctx context.Context, req *hello.SayHelloReq) (
 }
 
 func main() {
-    app := go_server.New("lijia-server")
+    app := go_server.New("demo-server")
     
     //start http server
     httpSrv := app.HttpServer()
