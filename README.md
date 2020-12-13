@@ -83,26 +83,16 @@
 ```go
 package main
 
-import (
-    "context"
-    "flag"
-    "fmt"
-    "github.com/labstack/echo"
-    hello "github.com/lambdaxs/go-server/example/discover/pb"
+import (    
     "github.com/lambdaxs/go-server"
+
+    "github.com/labstack/echo"
+
+    "context"   
+    "fmt"
     "google.golang.org/grpc"
+    hello "github.com/lambdaxs/go-server/example/discover/pb"
 )
-
-type SayHelloServer struct {
-}
-
-func (s *SayHelloServer) SayHello(ctx context.Context, req *hello.SayHelloReq) (resp *hello.SayHelloResp, err error) {
-    resp = &hello.SayHelloResp{
-        Reply: "",
-    }
-    resp.Reply = fmt.Sprintf("%s:%s", req.GetName(), "hello")
-    return
-}
 
 func main() {
     app := go_server.New("demo-server")
@@ -116,11 +106,22 @@ func main() {
     //start grpc server
     app.RegisterGRPCServer(func(srv *grpc.Server) {
         hello.RegisterHelloServerServer(srv, &SayHelloServer{})             
-    })   
+    })
 
     //server start
     app.Run()
     
+}
+
+type SayHelloServer struct {
+}
+
+func (s *SayHelloServer) SayHello(ctx context.Context, req *hello.SayHelloReq) (resp *hello.SayHelloResp, err error) {
+    resp = &hello.SayHelloResp{
+        Reply: "",
+    }
+    resp.Reply = fmt.Sprintf("%s:%s", req.GetName(), "hello")
+    return
 }
 
 ```
