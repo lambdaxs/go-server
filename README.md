@@ -124,3 +124,57 @@ func main() {
 }
 
 ```
+
+- 启动程序
+
+```shell script
+go run main.go --config config.toml
+```
+
+## 配置文件
+
+- http服务配置
+
+```toml
+[httpServer]
+    host = "127.0.0.1"
+    port = 8000
+```
+
+- grpc服务配置
+
+```toml
+[grpcServer]
+    host = "127.0.0.1"
+    port = 8001
+```
+
+- mysql配置
+
+```toml
+[mysql]
+    [mysql.db]
+        dsn = "root:123456@tcp(127.0.0.1:3306)/dbname?charset=utf8&parseTime=True&loc=Local&readTimeout=3s"
+        log = true
+```
+
+```golang
+//get mysql db object
+db := go_server.Model("db")
+
+```
+
+- redis配置
+
+```toml
+[redis]
+    [redis.cache]
+        dsn = "127.0.0.1:6379"
+```
+
+```golang
+//get redis connect pool
+pool := go_server.RedisPool("cache")
+conn := pool.Get()
+defer conn.close()
+```
