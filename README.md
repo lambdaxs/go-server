@@ -56,6 +56,30 @@
 
 ## Example
 
+
+- config.toml
+
+```toml
+[httpServer]
+    host = "127.0.0.1"
+    port = 8000
+
+[grpcServer]
+    host = "127.0.0.1"
+    port = 8001
+
+[mysql]
+    [mysql.db]
+        dsn = "root:123456@tcp(127.0.0.1:3306)/dbname?charset=utf8&parseTime=True&loc=Local&readTimeout=3s"
+        log = true
+
+[redis]
+    [redis.cache]
+        dsn = "127.0.0.1:6379"
+```
+
+- main.go
+
 ```go
 package main
 
@@ -65,7 +89,7 @@ import (
     "fmt"
     "github.com/labstack/echo"
     hello "github.com/lambdaxs/go-server/example/discover/pb"
-    "github.com/lambdaxs/go-server/server"
+    "github.com/lambdaxs/go-server"
     "google.golang.org/grpc"
 )
 
@@ -81,29 +105,22 @@ func (s *SayHelloServer) SayHello(ctx context.Context, req *hello.SayHelloReq) (
 }
 
 func main() {
-    flag.Parse()
-
-    httpSrv := server.HttpServer{
-        Host:        "127.0.0.1",
-        Port:        9000,
-        ConsulAddr: "127.0.0.1:8500",
-        ServiceName: "HelloService",
-    }
-    go httpSrv.StartEchoServer(func(srv *echo.Echo) {
-        srv.GET("/", func(c echo.Context) error {
-            return c.JSON(200, "hello world");
-        })
+    app := go_server.New("lijia-server")
+    
+    //start http server
+    httpSrv := app.HttpServer()
+    httpSrv.GET("/hello", func(c echo.Context) error {
+        return c.JSON(200,"Hello Go-Server!")
     })
+    
+    //start grpc server
+    app.RegisterGRPCServer(func(srv *grpc.Server) {
+        hello.RegisterHelloServerServer(srv, &SayHelloServer{})             
+    })   
 
-    grpcSrv := server.GRPCServer{
-        Host:       "127.0.0.1",
-        Port:       9002,
-        ConsulAddr: "127.0.0.1:8500",
-        ServiceName: "HelloService",
-    }
-    grpcSrv.StartGRPCServer(func(srv *grpc.Server) {
-        hello.RegisterHelloServerServer(srv, &SayHelloServer{})
-    })
+    //server start
+    app.Run()
+    
 }
 
 ```
