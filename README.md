@@ -63,10 +63,12 @@
 [httpServer]
     host = "127.0.0.1"
     port = 8000
+    consulAddr = "127.0.0.1:8500"
 
 [grpcServer]
     host = "127.0.0.1"
     port = 8001
+    consulAddr = "127.0.0.1:8500"
 
 [mysql]
     [mysql.db]
@@ -140,7 +142,9 @@ go run main.go --config config.toml
 [httpServer]
     host = "127.0.0.1"
     port = 8000
+    consulAddr = "127.0.0.1:8500" #consulAddr为consul的链接地址，用户服务发现与注册。可选，留空即为单机服务
 ```
+
 
 - grpc服务配置
 
@@ -148,6 +152,7 @@ go run main.go --config config.toml
 [grpcServer]
     host = "127.0.0.1"
     port = 8001
+    consulAddr = "127.0.0.1:8500" #consulAddr为consul的链接地址，用户服务发现与注册。可选，留空即为单机服务
 ```
 
 - mysql配置

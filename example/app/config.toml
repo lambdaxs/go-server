@@ -1,10 +1,12 @@
 [httpServer]
     host = "127.0.0.1"
     port = 8080
+    consulAddr = "127.0.0.1:8500"
 
 [grpcServer]
     host = "127.0.0.1"
     port = 8081
+    consulAddr = "127.0.0.1:8500"
 
 [log]
     development = true
