@@ -80,7 +80,7 @@ func HttpServerMonitor() echo.MiddlewareFunc {
     return func(next echo.HandlerFunc) echo.HandlerFunc {
         return func(c echo.Context) error {
             start := time.Now()
-            path := c.Request().URL.String()
+            path := c.Request().URL.Path
             code := strconv.Itoa(c.Response().Status)
 
             if err := next(c); err != nil {
