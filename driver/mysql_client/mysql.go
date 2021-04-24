@@ -39,14 +39,14 @@ func (g *MysqlConfig) Connect() (db *gorm.DB, err error) {
 		g.WriteTimeout = time.Second * 3
 	}
 	//update dsn
-	g.DSN, err = updateDSNQuery(g.DSN, map[string]string{
-		"timeout":      g.DialTimeout.String(),
-		"readTimeout":  g.ReadTimeout.String(),
-		"writeTimeout": g.WriteTimeout.String(),
-	})
-	if err != nil {
-		return
-	}
+	//g.DSN, err = updateDSNQuery(g.DSN, map[string]string{
+	//	"timeout":      g.DialTimeout.String(),
+	//	"readTimeout":  g.ReadTimeout.String(),
+	//	"writeTimeout": g.WriteTimeout.String(),
+	//})
+	//if err != nil {
+	//	return
+	//}
 	db, err = gorm.Open("mysql", g.DSN)
 	if err != nil {
 		return
