@@ -6,7 +6,7 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/bluele/gcache v0.0.0-20190518031135-bc40bd653833
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
+	github.com/golang-jwt/jwt v3.2.1 // indirect
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-playground/locales v0.13.0
 	github.com/go-playground/universal-translator v0.17.0
@@ -22,7 +22,7 @@ require (
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.3.0 // indirect
 	github.com/lambdaxs/rocketmq-client-go v1.3.1
-	github.com/nats-io/nats-server/v2 v2.1.4 // indirect
+	github.com/nats-io/nats-server/v2 v2.1.9 // indirect
 	github.com/nats-io/nats-streaming-server v0.16.2 // indirect
 	github.com/nats-io/nats.go v1.9.1
 	github.com/nats-io/stan.go v0.6.0
