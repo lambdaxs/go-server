@@ -34,4 +34,5 @@ require (
 	google.golang.org/genproto v0.0.0-20191223191004-3caeed10a8bf // indirect
 	google.golang.org/grpc v1.19.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
+	github.com/tidwall/gjson v1.9.2
 )
